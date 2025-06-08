@@ -18,7 +18,6 @@ from urllib.parse import urljoin, urlparse
 import time
 import os
 import urllib.parse
-import datetime
 
 class WikiTextLinkExtractor:
     def __init__(self, base_url="https://he.wikisource.org"):
@@ -108,44 +107,9 @@ class WikiTextLinkExtractor:
         ]
         
         return any(pattern in href for pattern in navigation_patterns)
-
-    def get_last_modified(self, title):
-        """Return the UTC datetime of the last revision of a page"""
-        api_url = urljoin(self.base_url, "/w/api.php")
-        params = {
-            'action': 'query',
-            'titles': title,
-            'prop': 'revisions',
-            'rvprop': 'timestamp',
-            'format': 'json'
-        }
-        try:
-            response = self.session.get(api_url, params=params, timeout=30)
-            response.raise_for_status()
-            data = response.json()
-            pages = data.get('query', {}).get('pages', {})
-            for page in pages.values():
-                revs = page.get('revisions')
-                if revs:
-                    ts = revs[0].get('timestamp')
-                    return datetime.datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ")
-        except Exception as e:
-            print(f"Error retrieving last modified for {title}: {e}")
-        return None
-
-    def page_modified_within_last_day(self, url):
-        """Check if a page was modified within the last 24 hours"""
-        parsed = urlparse(url)
-        if not parsed.path.startswith('/wiki/'):
-            return False
-        title = urllib.parse.unquote(parsed.path[len('/wiki/'):])
-        last_modified = self.get_last_modified(title)
-        if not last_modified:
-            return False
-        return datetime.datetime.utcnow() - last_modified <= datetime.timedelta(days=1)
     
-    def extract_law_links(self, url, max_links=100):
-        """Extract law rule links from the given URL limited by max_links"""
+    def extract_law_links(self, url):
+        """Extract all law rule links from the given URL"""
         content = self.fetch_page_content(url)
         if not content:
             return []
@@ -184,10 +148,8 @@ class WikiTextLinkExtractor:
                     'text': link_text,
                     'original_href': href
                 })
-                if len(law_links) >= max_links:
-                    break
                 
-        print(f"Filtered to {len(law_links)} law rule links (max {max_links})")
+        print(f"Filtered to {len(law_links)} law rule links")
         return law_links
 
     def extract_law_content(self, url):
@@ -240,10 +202,6 @@ class WikiTextLinkExtractor:
         saved_count = 0
         for link_data in law_links[:max_links]:
             try:
-                if not self.page_modified_within_last_day(link_data['url']):
-                    print(f"Skipping {link_data['url']} - not modified in the last day")
-                    continue
-
                 # Extract content
                 content = self.extract_law_content(link_data['url'])
                 if not content:
@@ -281,19 +239,11 @@ def main():
     """Main function to execute the link extraction"""
     target_url = "https://he.wikisource.org/wiki/%D7%A1%D7%A4%D7%A8_%D7%94%D7%97%D7%95%D7%A7%D7%99%D7%9D_%D7%94%D7%A4%D7%AA%D7%95%D7%97"
     
-    print("=== WikiText Law Rule Link Extractor ===")
-    print(f"Target URL: {target_url}")
-    print("-" * 50)
-    
     # Create extractor instance
     extractor = WikiTextLinkExtractor()
     
     # Extract law rule links
-    law_links_vector = extractor.extract_law_links(target_url, max_links=100)
-    
-    print("\n=== RESULTS ===")
-    print(f"Total law rule links found: {len(law_links_vector)}")
-    print("-" * 50)
+    law_links_vector = extractor.extract_law_links(target_url)
     
     # Iterate through the vector and print all links
     if law_links_vector:
@@ -313,8 +263,6 @@ def main():
     output_file = "extracted_law_links.txt"
     try:
         with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(f"Law Rule Links from {target_url}\n")
-            f.write("=" * 50 + "\n\n")
             for i, link_data in enumerate(law_links_vector, 1):
                 f.write(f"{i}. {link_data['url']}\n")
                 if link_data['text']:
