@@ -6,7 +6,7 @@ Extract All Law Rules Links from WikiText
 
 This script extracts all <a> tag links (href property) from the Hebrew WikiSource page
 that ARE law rules, stores them in a vector (list), and prints them all.
-Then extracts and saves the content of the first 50 law links.
+Then extracts and saves the content of the first 100 law links.
 
 Author: Generated for extractAllRulesFromWikiText project
 """
@@ -18,6 +18,7 @@ from urllib.parse import urljoin, urlparse
 import time
 import os
 import urllib.parse
+import datetime
 
 class WikiTextLinkExtractor:
     def __init__(self, base_url="https://he.wikisource.org"):
@@ -107,9 +108,44 @@ class WikiTextLinkExtractor:
         ]
         
         return any(pattern in href for pattern in navigation_patterns)
+
+    def get_last_modified(self, title):
+        """Return the UTC datetime of the last revision of a page"""
+        api_url = urljoin(self.base_url, "/w/api.php")
+        params = {
+            'action': 'query',
+            'titles': title,
+            'prop': 'revisions',
+            'rvprop': 'timestamp',
+            'format': 'json'
+        }
+        try:
+            response = self.session.get(api_url, params=params, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            pages = data.get('query', {}).get('pages', {})
+            for page in pages.values():
+                revs = page.get('revisions')
+                if revs:
+                    ts = revs[0].get('timestamp')
+                    return datetime.datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ")
+        except Exception as e:
+            print(f"Error retrieving last modified for {title}: {e}")
+        return None
+
+    def page_modified_within_last_day(self, url):
+        """Check if a page was modified within the last 24 hours"""
+        parsed = urlparse(url)
+        if not parsed.path.startswith('/wiki/'):
+            return False
+        title = urllib.parse.unquote(parsed.path[len('/wiki/'):])
+        last_modified = self.get_last_modified(title)
+        if not last_modified:
+            return False
+        return datetime.datetime.utcnow() - last_modified <= datetime.timedelta(days=1)
     
-    def extract_law_links(self, url):
-        """Extract all law rule links from the given URL"""
+    def extract_law_links(self, url, max_links=100):
+        """Extract law rule links from the given URL limited by max_links"""
         content = self.fetch_page_content(url)
         if not content:
             return []
@@ -148,8 +184,10 @@ class WikiTextLinkExtractor:
                     'text': link_text,
                     'original_href': href
                 })
+                if len(law_links) >= max_links:
+                    break
                 
-        print(f"Filtered to {len(law_links)} law rule links")
+        print(f"Filtered to {len(law_links)} law rule links (max {max_links})")
         return law_links
 
     def extract_law_content(self, url):
@@ -202,6 +240,10 @@ class WikiTextLinkExtractor:
         saved_count = 0
         for link_data in law_links[:max_links]:
             try:
+                if not self.page_modified_within_last_day(link_data['url']):
+                    print(f"Skipping {link_data['url']} - not modified in the last day")
+                    continue
+
                 # Extract content
                 content = self.extract_law_content(link_data['url'])
                 if not content:
@@ -228,7 +270,7 @@ class WikiTextLinkExtractor:
                 saved_count += 1
                 
                 # Add a small delay to be nice to the server
-                time.sleep(1)
+                time.sleep(0.5)
                 
             except Exception as e:
                 print(f"Error processing {link_data['url']}: {e}")
@@ -247,7 +289,7 @@ def main():
     extractor = WikiTextLinkExtractor()
     
     # Extract law rule links
-    law_links_vector = extractor.extract_law_links(target_url)
+    law_links_vector = extractor.extract_law_links(target_url, max_links=100)
     
     print("\n=== RESULTS ===")
     print(f"Total law rule links found: {len(law_links_vector)}")
@@ -282,9 +324,9 @@ def main():
     except Exception as e:
         print(f"Error saving to file: {e}")
         
-    # Extract and save content of first 50 law links
+    # Extract and save content of first 100 law links
     print("\n=== Extracting Law Contents ===")
-    saved_count = extractor.save_law_contents(law_links_vector, max_links=50)
+    saved_count = extractor.save_law_contents(law_links_vector, max_links=100)
     print(f"\nSuccessfully saved content of {saved_count} law links to the 'extracted_rules' folder")
 
 if __name__ == "__main__":
