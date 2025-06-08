@@ -6,7 +6,6 @@ Extract All Law Rules Links from WikiText
 
 This script extracts all <a> tag links (href property) from the Hebrew WikiSource page
 that ARE law rules, stores them in a vector (list), and prints them all.
-Then extracts and saves the content of the first 100 law links.
 
 Author: Generated for extractAllRulesFromWikiText project
 """
@@ -19,7 +18,7 @@ import time
 import os
 import urllib.parse
 from datetime import datetime
-
+import sys
 
 HEBREW_MONTHS = {
     "ינואר": 1,
@@ -35,6 +34,15 @@ HEBREW_MONTHS = {
     "נובמבר": 11,
     "דצמבר": 12,
 }
+
+def get_script_dir():
+    # Get the directory where the script/exe is located
+    if getattr(sys, 'frozen', False):
+        # If the application is run as a bundle (exe)
+        return os.path.dirname(sys.executable)
+    else:
+        # If the application is run from a Python interpreter
+        return os.path.dirname(os.path.abspath(__file__))
 
 
 def fetch_latest_update_date(history_url):
@@ -71,6 +79,8 @@ def fetch_latest_update_date(history_url):
 
 def should_download(history_url, last_file="lastUpdated.txt"):
     """Determine whether files should be downloaded based on last update."""
+    last_file = os.path.join(get_script_dir(), last_file)
+    
     latest_date = fetch_latest_update_date(history_url)
     if not latest_date:
         print("Could not determine latest date. Assuming download needed.")
@@ -265,14 +275,16 @@ class WikiTextLinkExtractor:
         
         return html_template
 
-    def save_law_contents(self, law_links, max_links):
+    def save_law_contents(self, law_links, max_links=-1):
         """Save the content of law links to files"""
         # Create extracted_rules directory if it doesn't exist
-        output_dir = "extracted_rules"
+        output_dir = os.path.join(get_script_dir(), "extracted_rules")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
         saved_count = 0
+        if max_links <= 1:
+            max_links = len(law_links)
         for link_data in law_links[:max_links]:
             try:
                 # Extract content
@@ -338,7 +350,7 @@ def main():
     print(f"Successfully extracted {len(law_links_vector)} law rule links")
     
     # Save results to file
-    output_file = "extracted_law_links.txt"
+    output_file = os.path.join(get_script_dir(), "extracted_law_links.txt")
     try:
         with open(output_file, 'w', encoding='utf-8') as f:
             for i, link_data in enumerate(law_links_vector, 1):
@@ -350,9 +362,8 @@ def main():
     except Exception as e:
         print(f"Error saving to file: {e}")
         
-    # Extract and save content of first 100 law links
     print("\n=== Extracting Law Contents ===")
-    saved_count = extractor.save_law_contents(law_links_vector, max_links=100)
+    saved_count = extractor.save_law_contents(law_links_vector)
     print(f"\nSuccessfully saved content of {saved_count} law links to the 'extracted_rules' folder")
 
 if __name__ == "__main__":

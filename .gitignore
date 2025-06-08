@@ -24,3 +24,17 @@ env/
 # Ignore system files
 .DS_Store
 Thumbs.db 
+
+
+build/
+dist/
+*.spec
+*.exe
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+
+
+*.txt
