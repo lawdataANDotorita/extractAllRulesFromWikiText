@@ -18,6 +18,7 @@ import time
 import os
 import urllib.parse
 from datetime import datetime
+from html2docx import html2docx
 import sys
 import hashlib
 
@@ -319,14 +320,24 @@ class WikiTextLinkExtractor:
                     print(f"File content unchanged: {file_path}")
                     continue
 
-
                 # Save content to file
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(content)
-                    
+
                 print(f"Saved content to: {file_path}")
+
+                # Also create a docx file from the HTML content
+                try:
+                    docx_buffer = html2docx(content, filename)
+                    docx_path = os.path.join(output_dir, f"{filename}.docx")
+                    with open(docx_path, "wb") as df:
+                        df.write(docx_buffer.getvalue())
+                    print(f"Saved docx to: {docx_path}")
+                except Exception as e:
+                    print(f"Error converting to docx: {e}")
+
                 saved_count += 1
-                
+
                 # Add a small delay to be nice to the server
                 time.sleep(0.5)
                 
