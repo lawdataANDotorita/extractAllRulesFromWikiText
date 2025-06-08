@@ -19,6 +19,7 @@ import os
 import urllib.parse
 from datetime import datetime
 import sys
+import hashlib
 
 HEBREW_MONTHS = {
     "ינואר": 1,
@@ -34,6 +35,9 @@ HEBREW_MONTHS = {
     "נובמבר": 11,
     "דצמבר": 12,
 }
+
+def file_hash(content):
+    return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
 def get_script_dir():
     # Get the directory where the script/exe is located
@@ -292,20 +296,31 @@ class WikiTextLinkExtractor:
                 if not content:
                     print(f"Could not extract content from: {link_data['url']}")
                     continue
-                    
+
+                file_hash1 = file_hash(content)
+
                 # Create filename from URL
                 parsed_url = urlparse(link_data['url'])
                 path_parts = parsed_url.path.split('/')
                 filename = path_parts[-1] if path_parts[-1] else path_parts[-2]
-                
+
                 # Decode URL-encoded filename
                 filename = urllib.parse.unquote(filename)
                 
                 # Add .htm extension
-                filename = f"{filename}.htm"
-                
+                file_path = os.path.join(output_dir, f"{filename}.htm")
+
+                file_hash2 = ""
+                if os.path.exists(file_path):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content2 = f.read()
+                        file_hash2 = file_hash(content2)
+                if file_hash1 == file_hash2:
+                    print(f"File content unchanged: {file_path}")
+                    continue
+
+
                 # Save content to file
-                file_path = os.path.join(output_dir, filename)
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(content)
                     
