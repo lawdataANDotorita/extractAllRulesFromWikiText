@@ -18,7 +18,8 @@ import time
 import os
 import urllib.parse
 from datetime import datetime
-from html2docx import html2docx
+import subprocess
+import tempfile
 import sys
 import hashlib
 
@@ -277,8 +278,32 @@ class WikiTextLinkExtractor:
     {str(main_content)}
 </body>
 </html>"""
-        
+
         return html_template
+
+    def convert_html_to_docx(self, html_content, output_path):
+        """Convert HTML content to a docx file using pandoc."""
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".html", mode="w", encoding="utf-8") as tmp_html:
+                tmp_html.write(html_content)
+                tmp_html_path = tmp_html.name
+            subprocess.run([
+                "pandoc",
+                tmp_html_path,
+                "-f",
+                "html",
+                "-t",
+                "docx",
+                "--metadata=lang:he",
+                "--metadata=dir:rtl",
+                "-o",
+                output_path,
+            ], check=True)
+            os.unlink(tmp_html_path)
+            return True
+        except Exception as e:
+            print(f"Error converting HTML to docx with pandoc: {e}")
+            return False
 
     def save_law_contents(self, law_links, max_links=-1):
         """Save the content of law links to files"""
@@ -326,15 +351,10 @@ class WikiTextLinkExtractor:
 
                 print(f"Saved content to: {file_path}")
 
-                # Also create a docx file from the HTML content
-                try:
-                    docx_buffer = html2docx(content, filename)
-                    docx_path = os.path.join(output_dir, f"{filename}.docx")
-                    with open(docx_path, "wb") as df:
-                        df.write(docx_buffer.getvalue())
+                # Also create a docx file from the HTML content using pandoc
+                docx_path = os.path.join(output_dir, f"{filename}.docx")
+                if self.convert_html_to_docx(content, docx_path):
                     print(f"Saved docx to: {docx_path}")
-                except Exception as e:
-                    print(f"Error converting to docx: {e}")
 
                 saved_count += 1
 
