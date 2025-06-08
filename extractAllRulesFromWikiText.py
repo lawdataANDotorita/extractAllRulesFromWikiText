@@ -283,7 +283,7 @@ class WikiTextLinkExtractor:
     def save_law_contents(self, law_links, max_links=-1):
         """Save the content of law links to files"""
         # Create extracted_rules directory if it doesn't exist
-        output_dir = os.path.join(get_script_dir(), "extracted_rules")
+        output_dir = os.path.join(get_script_dir(), "extracted_rules2")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
