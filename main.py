@@ -18,6 +18,79 @@ from urllib.parse import urljoin, urlparse
 import time
 import os
 import urllib.parse
+from datetime import datetime
+
+
+HEBREW_MONTHS = {
+    "ינואר": 1,
+    "פברואר": 2,
+    "מרץ": 3,
+    "אפריל": 4,
+    "מאי": 5,
+    "יוני": 6,
+    "יולי": 7,
+    "אוגוסט": 8,
+    "ספטמבר": 9,
+    "אוקטובר": 10,
+    "נובמבר": 11,
+    "דצמבר": 12,
+}
+
+
+def fetch_latest_update_date(history_url):
+    """Return the latest change date from the history page in dd/MM/yyyy format."""
+    try:
+        response = requests.get(history_url, timeout=30)
+        response.raise_for_status()
+        response.encoding = "utf-8"
+        soup = BeautifulSoup(response.text, "html.parser")
+        elem = soup.find(class_="mw-changeslist-date")
+        if not elem:
+            print("Could not find a changes list date element")
+            return None
+        text = elem.get_text(strip=True)
+        # Expected format: "16:50, 28 במרץ 2025"
+        parts = text.split(",", 1)
+        date_part = parts[1].strip() if len(parts) > 1 else text
+        match = re.search(r"(\d{1,2})\s+ב([^\s]+)\s+(\d{4})", date_part)
+        if not match:
+            print(f"Unexpected date format: {text}")
+            return None
+        day = int(match.group(1))
+        month_name = match.group(2)
+        year = int(match.group(3))
+        month = HEBREW_MONTHS.get(month_name)
+        if not month:
+            print(f"Unknown month name: {month_name}")
+            return None
+        return f"{day:02d}/{month:02d}/{year}"
+    except Exception as e:
+        print(f"Error fetching history page: {e}")
+        return None
+
+
+def should_download(history_url, last_file="lastUpdated.txt"):
+    """Determine whether files should be downloaded based on last update."""
+    latest_date = fetch_latest_update_date(history_url)
+    if not latest_date:
+        print("Could not determine latest date. Assuming download needed.")
+        return True
+
+    if not os.path.exists(last_file):
+        with open(last_file, "w", encoding="utf-8") as f:
+            f.write(latest_date)
+        return True
+
+    with open(last_file, "r", encoding="utf-8") as f:
+        stored_date = f.read().strip()
+
+    if stored_date != latest_date:
+        with open(last_file, "w", encoding="utf-8") as f:
+            f.write(latest_date)
+        return True
+
+    print("Version unchanged. Skipping download process.")
+    return False
 
 class WikiTextLinkExtractor:
     def __init__(self, base_url="https://he.wikisource.org"):
@@ -237,6 +310,11 @@ class WikiTextLinkExtractor:
 
 def main():
     """Main function to execute the link extraction"""
+    history_url = (
+        "https://he.wikisource.org/w/index.php?title=%D7%A1%D7%A4%D7%A8_%D7%94%D7%97%D7%95%D7%A7%D7%99%D7%9D_%D7%94%D7%A4%D7%AA%D7%95%D7%97&action=history"
+    )
+    if not should_download(history_url):
+        return
     target_url = "https://he.wikisource.org/wiki/%D7%A1%D7%A4%D7%A8_%D7%94%D7%97%D7%95%D7%A7%D7%99%D7%9D_%D7%94%D7%A4%D7%AA%D7%95%D7%97"
     
     # Create extractor instance
