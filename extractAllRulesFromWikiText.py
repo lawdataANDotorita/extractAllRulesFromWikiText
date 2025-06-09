@@ -23,6 +23,7 @@ import tempfile
 import sys
 import hashlib
 
+
 HEBREW_MONTHS = {
     "ינואר": 1,
     "פברואר": 2,
@@ -281,26 +282,69 @@ class WikiTextLinkExtractor:
 
         return html_template
 
+    def check_pandoc_available(self):
+        """Check if pandoc is available on the system."""
+        try:
+            # Try different pandoc command variations
+            pandoc_commands = ["pandoc", "pandoc.exe"]
+            for cmd in pandoc_commands:
+                try:
+                    result = subprocess.run([cmd, "--version"], 
+                                          capture_output=True, 
+                                          text=True, 
+                                          timeout=10)
+                    if result.returncode == 0:
+                        return cmd
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    continue
+            return None
+        except Exception:
+            return None
+
     def convert_html_to_docx(self, html_content, output_path):
         """Convert HTML content to a docx file using pandoc."""
+        # First check if pandoc is available
+        pandoc_cmd = self.check_pandoc_available()
+        if not pandoc_cmd:
+            print("Warning: Pandoc is not installed or not found in PATH.")
+            print("Please install Pandoc from https://pandoc.org/installing.html to generate DOCX files.")
+            print("Skipping DOCX conversion...")
+            return False
+            
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".html", mode="w", encoding="utf-8") as tmp_html:
-                tmp_html.write(html_content)
-                tmp_html_path = tmp_html.name
-            subprocess.run([
-                "pandoc",
-                tmp_html_path,
-                "-f",
-                "html",
-                "-t",
-                "docx",
-                "--metadata=lang:he",
-                "--metadata=dir:rtl",
-                "-o",
-                output_path,
-            ], check=True)
-            os.unlink(tmp_html_path)
-            return True
+            # Create a temporary directory to store both HTML and CSS files
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Write the HTML file
+                html_path = os.path.join(temp_dir, "temp.html")
+                with open(html_path, "w", encoding="utf-8") as f:
+                    f.write(html_content)
+                
+                
+                # Build pandoc command
+                pandoc_args = [
+                    pandoc_cmd,
+                    html_path,
+                    "-f",
+                    "html",
+                    "-t",
+                    "docx",
+                    "--metadata=lang:he",
+                    "--metadata=dir:rtl",
+                    "-o",
+                    output_path,
+                ]
+                
+                # Run pandoc with the temporary directory as working directory
+                subprocess.run(pandoc_args, check=True, cwd=temp_dir)
+                return True
+
+        except subprocess.CalledProcessError as e:
+            print(f"Error running pandoc command: {e}")
+            return False
+        except FileNotFoundError as e:
+            print(f"Pandoc executable not found: {e}")
+            print("Please install Pandoc from https://pandoc.org/installing.html")
+            return False
         except Exception as e:
             print(f"Error converting HTML to docx with pandoc: {e}")
             return False
@@ -355,6 +399,8 @@ class WikiTextLinkExtractor:
                 docx_path = os.path.join(output_dir, f"{filename}.docx")
                 if self.convert_html_to_docx(content, docx_path):
                     print(f"Saved docx to: {docx_path}")
+                else:
+                    print(f"DOCX conversion skipped for: {filename} (HTML file saved successfully)")
 
                 saved_count += 1
 
