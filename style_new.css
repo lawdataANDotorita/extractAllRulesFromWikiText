@@ -33,8 +33,8 @@ pre {
 }
 
 .toplink {
-    position: absolute;
-    left: 35px
+    display: inline-block;
+    margin-left: 35px
 }
 
 .mw-indicators {
@@ -65,10 +65,9 @@ pre {
 
 .shortcut {
     display: inline-block;
-    left: 12px;
+    margin-left: 12px;
     font-size: 75%;
-    position: absolute;
-    top: 0.3em
+    margin-top: 0.3em
 }
 
 .effect_on_hover {
@@ -186,7 +185,6 @@ div.NavFrame div.NavHead {
     font-size: 100%;
     font-weight: bold;
     height: 1.6em;
-    position: relative
 }
 
 div.NavFrame p {
@@ -212,9 +210,9 @@ div.NavEnd {
 a.NavToggle {
     font-size: smaller;
     font-weight: normal;
-    left: 3px;
-    position: absolute;
-    top: 0
+    display: inline-block;
+    margin-left: 3px;
+    margin-top: 0
 }
 
 table.navbox {
@@ -232,13 +230,14 @@ table.navbox th {
     background-color: #ccf
 }
 
-div.columns dl,div.columns ol,div.columns ul,div.columns p:first-child {
+div.columns dl,
+div.columns ol,
+div.columns ul,
+div.columns p:first-child {
     margin-top: 0
 }
 
 div.columns {
-    orphans: 2;
-    widows: 2
 }
 
 div.hierarchical > dl {
@@ -272,43 +271,22 @@ div.hierarchical dd dd,div.hierarchical li li,div.hierarchical ul ul {
     display: none
 }
 
-.hlist dt:after {
-    content: ":"
 }
 
-.hlist dd:after,.hlist li:after {
-    content: " • ";
     font-weight: bold
 }
 
-.hlist dd:last-child:after,.hlist dt:last-child:after,.hlist li:last-child:after {
-    content: none
 }
 
-.hlist dd dd:first-child:before,.hlist dd dt:first-child:before,.hlist dd li:first-child:before,.hlist dt dd:first-child:before,.hlist dt dt:first-child:before,.hlist dt li:first-child:before,.hlist li dd:first-child:before,.hlist li dt:first-child:before,.hlist li li:first-child:before {
-    content: " (";
     font-weight: normal
 }
 
-.hlist dd dd:last-child:after,.hlist dd dt:last-child:after,.hlist dd li:last-child:after,.hlist dt dd:last-child:after,.hlist dt dt:last-child:after,.hlist dt li:last-child:after,.hlist li dd:last-child:after,.hlist li dt:last-child:after,.hlist li li:last-child:after {
-    content: ")";
     font-weight: normal
 }
 
-.hlist ol {
-    counter-reset: listitem
+
 }
 
-.hlist ol > li {
-    counter-increment: listitem
-}
-
-.hlist ol > li:before {
-    content: " " counter(listitem) "\a0"
-}
-
-.hlist dd ol > li:first-child:before,.hlist dt ol > li:first-child:before,.hlist li ol > li:first-child:before {
-    content: " (" counter(listitem) "\a0"
 }
 
 .law,#law-content,#law-content h1,#law-content h2,#law-content h3,#law-content h4 {
@@ -318,7 +296,6 @@ div.hierarchical dd dd,div.hierarchical li li,div.hierarchical ul ul {
     font-size: 16px;
     line-height: 1.15;
     font-family: Alef,sans-serif;
-    hyphenate-character: "־"
 }
 
 h1.firstHeading > span.law {
@@ -363,14 +340,10 @@ h1.firstHeading > span.law {
     text-align: center;
     font-size: 185%;
     font-weight: bold;
-    text-wrap: balance;
     padding: 0
 }
 
 .law-toc {
-    columns: 2 auto;
-    -moz-columns: 2 auto;
-    -webkit-columns: 2 auto;
     text-align: start;
     padding-bottom: 1em
 }
@@ -395,7 +368,6 @@ h1.firstHeading > span.law {
 .law-part,.law-section,.law-subsection,.law-subsubsection,#law-content h1,#law-content h2,#law-content h3,#law-content h4 {
     text-align: center;
     font-weight: normal;
-    text-wrap: balance;
     padding: 0 6.25rem
 }
 
@@ -444,12 +416,13 @@ div.law-note p {
 }
 
 .law-sec-note {
-    position: absolute;
+    display: inline-block;
     width: 95px;
     font-size: 10.5px;
     text-align: start;
     margin-top: 15px;
-    margin-right:-95px;color: gray
+    margin-right: -95px;
+    color: gray
 }
 
 .law-desc,.law-sec-desc {
@@ -472,12 +445,13 @@ div.law-note p {
 }
 
 .law-number,.law-number1,.law-number2,.law-number3,.law-number4,.law-number5,.law-number6,.law-number7 {
+    display: inline-block;
     text-align: start;
     white-space: nowrap;
-    padding-left:0.25em;margin-right:-2.5em;width: 2.2em;
-    height: 0;
-    position: relative;
-    z-index: 10
+    padding-left: 0.25em;
+    margin-right: -2.5em;
+    width: 2.2em;
+    height: 0
 }
 
 .law-number,.law-number1 {
@@ -506,7 +480,6 @@ div.law-note p {
     margin-right:2.5em;height: 1.2em
 }
 
-.law-content:not(:empty),.law-content1:not(:empty),.law-content2:not(:empty),.law-content3:not(:empty),.law-content4:not(:empty),.law-content5:not(:empty),.law-content6:not(:empty),.law-content7:not(:empty),.law p {
     padding-bottom: 0.25em
 }
 
@@ -704,11 +677,9 @@ div.sources {
 }
 
 #p-navigation {
-    z-index: 1
 }
 
 #p-search {
-    z-index: 1
 }
 
 .beur {
@@ -728,9 +699,8 @@ div.sources {
 }
 
 .TooltipTip {
+    display: inline-block;
     width: 111pt;
-    z-index: 9;
-    position: absolute;
     background-color: #ffc;
     padding: 1px;
     border: 1px #000 solid;
@@ -744,32 +714,10 @@ div.sources {
     font-size: 90%
 }
 
-span[rel="mw:referencedBy"]::before {
-    font-weight: bold;
-    content: "^ "
-}
 
-a[rel="mw:referencedBy"]::before {
-    font-weight: bold;
-    content: "^"
-}
-
-@media screen {
-    div.limitedRef {
-        height: 160px;
-        overflow-y: auto;
-        padding: 3px;
-        border: solid 1px
-    }
-
-    html > body div.limitedRef ol.references {
-        display: block !important
-    }
-}
 
 body.ns-104 .sidenote-left {
-    position: absolute;
-    left: 0;
+    display: inline-block;
     width: 6em;
     padding-right: 1em;
     text-indent: 0;
@@ -777,8 +725,7 @@ body.ns-104 .sidenote-left {
 }
 
 body.ns-104 .sidenote-right {
-    position: absolute;
-    right: 0;
+    display: inline-block;
     width: 6em;
     padding-left: 1em;
     text-indent: 0;
@@ -797,13 +744,8 @@ ol.references li {
     margin: 0 3em
 }
 
-.refDisplayRows ol,ol.refDisplayRows {
-    -webkit-column-count: 2;
-    -moz-column-count: 2;
-    column-count: 2;
-    -webkit-column-gap: 20px;
-    -moz-column-gap: 20px;
-    column-gap: 20px
+.refDisplayRows ol,
+ol.refDisplayRows {
 }
 
 ol.refDisplayScroll {
@@ -977,25 +919,20 @@ ol.refDisplayHide {
     padding: 0
 }
 
-.poem-justify p:after {
-    content: '';
     display: inline-block;
     width: 100%
 }
 
-.text-condensed-1,.tc-1 {
-    transform: scaleX(0.9);
-    transform-origin: right center 0px
+.text-condensed-1,
+.tc-1 {
 }
 
-.text-condensed-2,.tc-2 {
-    transform: scaleX(0.8);
-    transform-origin: right center 0px
+.text-condensed-2,
+.tc-2 {
 }
 
-.text-condensed-3,.tc-3 {
-    transform: scaleX(0.7);
-    transform-origin: right center 0px
+.text-condensed-3,
+.tc-3 {
 }
 
 .ui-dialog {
@@ -1006,11 +943,6 @@ ol.refDisplayHide {
     right: inherit
 }
 
-@media not print {
-    .printonly {
-        display: none
-    }
-}
 
 .mw-editTools a {
     padding: 1.5px
@@ -1090,113 +1022,3 @@ td.mbox-empty-cell {
     display: none;
 }
 
-@media print {
-    @page {
-        size: A4;
-        margin: 0.5in;
-        page-orientation: upright
-    }
-
-    body {
-        font-family: 'Hadasim CLM','Hadassah Friedlaender','David CLM','David';
-        font-size: 12pt
-    }
-
-    .printfooter,.mw-footer,.thumb,figure,table,ol,dl,ul,.mw-heading3,h3,.mw-heading4,h4,.mw-heading5,h5,.mw-heading6,h6 {
-        font-family: inherit
-    }
-
-    #contentSub {
-        display: none
-    }
-
-    .vector-header-container {
-        display: none
-    }
-
-    span.subpages,p.subpages,div#catlinks.catlinks,li#developers,span#cite-this-page,.skin-cologneblue #langlinks,.mw-jump-link,.noprint {
-        display: none
-    }
-
-    .printfooter,#footer-info-lastmod,#mw-data-after-content,#mw-footer-container,#mw-teleport-target,#p-dock-bottom {
-        display: none !important
-    }
-
-    .firstHeading::before {
-        display: none !important
-    }
-
-    .beur {
-        font-family: David;
-        font-size: 16pt;
-        line-height: 23pt;
-        background: red
-    }
-
-    .the_explain {
-        visibility: visible;
-        border: none;
-        padding: 0;
-        margin: 0;
-        position: static;
-        background-color: #888 line-height:1em
-    }
-
-    .click_for_details,.click_to_edit,.shortcut,.navigation,.links_in_title {
-        display: none
-    }
-
-    .NavFrame .NavContent p {
-        display: block;
-        padding: 0 2em 0 2em;
-        margin: 0
-    }
-
-    .NavFrame .NavContent p b {
-        padding: 0;
-        margin: 0
-    }
-
-    .NavFrame .NavHead p {
-    }
-
-    div.advanced {
-        background-color: #888
-    }
-
-    .law,#law-content,.law p,.law ol li,.law ul li {
-        font-size: 10pt;
-        font-family: Alef,FrankRuehl,serif
-    }
-
-    .law,#law-content,.law p {
-        width: auto;
-        margin: 0
-    }
-
-    .law-part,.law-section,.law-subsection,.law-subsubsection {
-        page-break-after: avoid
-    }
-
-    .law a.external.text:after {
-        display: none;
-        content: ""
-    }
-
-    .law a {
-        border: none !important
-    }
-
-    .law-signatures li {
-        width: 20%
-    }
-
-    .law-float {
-        margin-left: 35px
-    }
-
-    a.external.text:after {
-        display: none;
-        content: ""
-    }
-}
