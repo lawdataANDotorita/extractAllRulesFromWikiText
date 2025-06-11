@@ -54,11 +54,6 @@ pre {
     text-align: center
 }
 
-.IPA {
-    font-family: Chrysanthi Unicode,Doulos SIL,Gentium,GentiumAlt,Code2000,TITUS Cyberbit Basic,DejaVu Sans,Bitstream Vera Sans,Bitstream Cyberbit,Arial Unicode MS,Lucida Sans Unicode,Hiragino Kaku Gothic Pro,Matrix Unicode;
-    font-family : inherit
-}
-
 .graytext,.graytext a,.graytext a.stub .graytext a.extiw {
     color: #777777 !important
 }
@@ -317,7 +312,6 @@ div.hierarchical dd dd,div.hierarchical li li,div.hierarchical ul ul {
     border: none;
     font-size: 16px;
     line-height: 1.15;
-    font-family: Alef,sans-serif;
     hyphenate-character: "־"
 }
 
@@ -610,21 +604,18 @@ hr.law-separator {
 }
 
 .psuq {
-    font-family: Narkisim,Times,"Times New Roman",serif;
     font-style: normal;
     font-size: 1.4em;
     color: #111155
 }
 
 .psuq2 {
-    font-family: David,Times,"Times New Roman",serif;
     font-style: normal;
     font-size: 1.8em;
     color: #111155
 }
 
 .mfrj {
-    font-family: Times,"Times New Roman",serif;
     font-style: normal;
     font-size: 1.15em;
     color: DarkGreen
@@ -640,8 +631,7 @@ div.yamim div,span.yamim span {
 
 .gmara_text {
     font-size: 135%;
-    line-height: 23pt;
-    font-family: Narkisim
+    line-height: 23pt
 }
 
 .gmara_rashi {
@@ -658,8 +648,7 @@ div.yamim div,span.yamim span {
 
 .mishna_text {
     font-size: 135%;
-    line-height: 23pt;
-    font-family: narkisim
+    line-height: 23pt
 }
 
 .mishna_bartenura {
@@ -672,13 +661,11 @@ div.yamim div,span.yamim span {
 
 .mishna_beyur {
     font-size: 135%;
-    line-height: 23pt;
-    font-family: Narkisim
+    line-height: 23pt
 }
 
 .mishna_beyur .editsection {
-    font-size: 35%;
-    font-family: Sans-serif
+    font-size: 35%
 }
 
 .mishna_chapters {
@@ -723,7 +710,6 @@ div.sources {
 }
 
 .beur {
-    font-family: David;
     font-size: 165%;
     line-height: 23pt
 }
@@ -747,8 +733,7 @@ div.sources {
     border: 1px #000 solid;
     font-size: 11pt;
     line-height: 13pt;
-    color: black;
-    font-family: sans-serif
+    color: black
 }
 
 .references {
@@ -970,8 +955,7 @@ ol.refDisplayHide {
 .texts {
     width: 33em;
     text-align: justify;
-    margin: 0 auto;
-    font-family: Alef,Alef
+    margin: 0 auto
 }
 
 .texts p {
@@ -1109,12 +1093,10 @@ td.mbox-empty-cell {
     }
 
     body {
-        font-family: 'Hadasim CLM','Hadassah Friedlaender','David CLM','David';
         font-size: 12pt
     }
 
     .printfooter,.mw-footer,.thumb,figure,table,ol,dl,ul,.mw-heading3,h3,.mw-heading4,h4,.mw-heading5,h5,.mw-heading6,h6 {
-        font-family: inherit
     }
 
     #contentSub {
@@ -1138,7 +1120,6 @@ td.mbox-empty-cell {
     }
 
     .beur {
-        font-family: David;
         font-size: 16pt;
         line-height: 23pt;
         background: red
@@ -1150,7 +1131,7 @@ td.mbox-empty-cell {
         padding: 0;
         margin: 0;
         position: static;
-        background-color: #888 line-height:1em
+        background-color: #888; line-height:1em
     }
 
     .click_for_details,.click_to_edit,.shortcut,.navigation,.links_in_title {
@@ -1176,8 +1157,7 @@ td.mbox-empty-cell {
     }
 
     .law,#law-content,.law p,.law ol li,.law ul li {
-        font-size: 10pt;
-        font-family: Alef,FrankRuehl,serif
+        font-size: 10pt
     }
 
     .law,#law-content,.law p {
@@ -1226,7 +1206,7 @@ td.mbox-empty-cell {
 
 
 body {
-    font-family: "Courier New", monospace;
+    font-family: Arial;
     background: #fafafa;
     color: #222;
 }

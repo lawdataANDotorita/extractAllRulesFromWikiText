@@ -260,11 +260,38 @@ class WikiTextLinkExtractor:
         for img in main_content.find_all('img'):
             img.decompose()
 
+
         # Remove all span elements with class "mw-editsection"
         for span in main_content.find_all('span', class_="mw-editsection"):
             span.decompose()
 
+        for span in main_content.find_all('span', class_="printonly"):
+            span.decompose()
 
+        """
+        for span in main_content.find_all('div', class_="law-cleaner"):
+            span.decompose()
+        """
+
+        for span in main_content.find_all('div', class_="printfooter"):
+            span.decompose()
+
+        for span in main_content.find_all('div', class_="graytext"):
+            span.decompose()
+
+        # Find all div elements with class law-number
+        for law_div in main_content.find_all('div', class_='law-number'):
+            # Find all direct child a elements
+            for a_tag in law_div.find_all('a', recursive=False):
+                
+                # Create a new span element with the same content and attributes as the a tag
+                new_span = soup.new_tag('span')
+                new_span.string = a_tag.string
+                new_span['class'] = a_tag.get('class', [])+ ['law-number-link']
+                new_span['href'] = a_tag.get('href', '')
+                
+                # Replace the a tag with the new span
+                a_tag.replace_with(new_span)
 
         # Create a new HTML document with proper structure
         html_template = f"""<!DOCTYPE html>
@@ -272,7 +299,6 @@ class WikiTextLinkExtractor:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{soup.title.string if soup.title else 'Law Document'}</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -302,7 +328,7 @@ class WikiTextLinkExtractor:
             return None
 
     def convert_html_to_docx(self, html_content, output_path):
-        """Convert HTML content to a docx file using pandoc."""
+        """Convert HTML content to a docx file using pandoc with a reference template."""
         # First check if pandoc is available
         pandoc_cmd = self.check_pandoc_available()
         if not pandoc_cmd:
@@ -310,29 +336,35 @@ class WikiTextLinkExtractor:
             print("Please install Pandoc from https://pandoc.org/installing.html to generate DOCX files.")
             print("Skipping DOCX conversion...")
             return False
+
+        # Get the path to the colored reference template (preferred) or fallback to original
+        reference_doc_path = os.path.join(get_script_dir(), "word_reference_template.docx")
+        lua_doc_path = os.path.join(get_script_dir(), "map-style.lua")
             
         try:
-            # Create a temporary directory to store both HTML and CSS files
+            # Create a temporary directory to store HTML file
             with tempfile.TemporaryDirectory() as temp_dir:
                 # Write the HTML file
                 html_path = os.path.join(temp_dir, "temp.html")
                 with open(html_path, "w", encoding="utf-8") as f:
                     f.write(html_content)
                 
-                
-                # Build pandoc command
+                # Build pandoc command with reference document if available
                 pandoc_args = [
                     pandoc_cmd,
                     html_path,
-                    "-f",
-                    "html",
-                    "-t",
-                    "docx",
+                    "-f", "html",
+                    "-t", "docx",
                     "--metadata=lang:he",
                     "--metadata=dir:rtl",
-                    "-o",
-                    output_path,
                 ]
+                
+                # Add reference document if it exists
+                if os.path.exists(reference_doc_path):
+                    pandoc_args.extend(["--reference-doc", reference_doc_path])
+#                if os.path.exists(lua_doc_path):
+ #                   pandoc_args.extend(["--lua-filter", lua_doc_path])
+                pandoc_args.extend(["-o", output_path])
                 
                 # Run pandoc with the temporary directory as working directory
                 subprocess.run(pandoc_args, check=True, cwd=temp_dir)
@@ -412,6 +444,7 @@ class WikiTextLinkExtractor:
                 
         return saved_count
 
+
 def main():
     """Main function to execute the link extraction"""
     history_url = (
@@ -455,7 +488,9 @@ def main():
         print(f"Error saving to file: {e}")
         
     print("\n=== Extracting Law Contents ===")
-    saved_count = extractor.save_law_contents(law_links_vector)
+#    saved_count = extractor.save_law_contents(law_links_vector)
+    saved_count = extractor.save_law_contents(law_links_vector,20)
+
     print(f"\nSuccessfully saved content of {saved_count} law links to the 'extracted_rules' folder")
 
 if __name__ == "__main__":

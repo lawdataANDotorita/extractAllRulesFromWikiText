@@ -28,6 +28,9 @@ Thumbs.db
 
 build/
 dist/
+extracted_rules/
+extracted_rules2/
+extracted_law_links.txt
 *.spec
 *.exe
 *.pyc
