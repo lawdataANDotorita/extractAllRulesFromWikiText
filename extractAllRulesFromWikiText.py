@@ -39,6 +39,8 @@ HEBREW_MONTHS = {
     "דצמבר": 12,
 }
 
+with_lua = True
+
 def file_hash(content):
     return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
@@ -280,18 +282,19 @@ class WikiTextLinkExtractor:
             span.decompose()
 
         # Find all div elements with class law-number
-        for law_div in main_content.find_all('div', class_='law-number'):
-            # Find all direct child a elements
-            for a_tag in law_div.find_all('a', recursive=False):
-                
-                # Create a new span element with the same content and attributes as the a tag
-                new_span = soup.new_tag('span')
-                new_span.string = a_tag.string
-                new_span['class'] = a_tag.get('class', [])+ ['law-number-link']
-                new_span['href'] = a_tag.get('href', '')
-                
-                # Replace the a tag with the new span
-                a_tag.replace_with(new_span)
+        if with_lua:
+            for law_div in main_content.find_all('div', class_='law-number'):
+                # Find all direct child a elements
+                for a_tag in law_div.find_all('a', recursive=False):
+                    
+                    # Create a new span element with the same content and attributes as the a tag
+                    new_span = soup.new_tag('span')
+                    new_span.string = a_tag.string
+                    new_span['class'] = a_tag.get('class', [])+ ['law-number-link']
+                    new_span['href'] = a_tag.get('href', '')
+                    
+                    # Replace the a tag with the new span
+                    a_tag.replace_with(new_span)
 
         # Create a new HTML document with proper structure
         html_template = f"""<!DOCTYPE html>
@@ -362,8 +365,10 @@ class WikiTextLinkExtractor:
                 # Add reference document if it exists
                 if os.path.exists(reference_doc_path):
                     pandoc_args.extend(["--reference-doc", reference_doc_path])
-#                if os.path.exists(lua_doc_path):
- #                   pandoc_args.extend(["--lua-filter", lua_doc_path])
+ 
+                if os.path.exists(lua_doc_path) and with_lua:
+                    pandoc_args.extend(["--lua-filter", lua_doc_path])
+
                 pandoc_args.extend(["-o", output_path])
                 
                 # Run pandoc with the temporary directory as working directory
