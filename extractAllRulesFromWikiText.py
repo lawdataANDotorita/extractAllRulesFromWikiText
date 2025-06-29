@@ -206,7 +206,7 @@ class WikiTextLinkExtractor:
 
         # Get the script directory
         script_dir = get_script_dir()
-        excel_path = os.path.join(script_dir, 'existing_rules.xlsx')
+        excel_path = os.path.join(script_dir, 'existing_rules_2.xlsx')
         
         try:
             # Read the Excel file
@@ -416,7 +416,7 @@ class WikiTextLinkExtractor:
     def save_law_contents(self, law_links, max_links=-1):
         """Save the content of law links to files"""
         # Create extracted_rules directory if it doesn't exist
-        output_dir = os.path.join(get_script_dir(), "rules_new_2")
+        output_dir = os.path.join(get_script_dir(), "rules_new_3")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
@@ -469,13 +469,13 @@ class WikiTextLinkExtractor:
                 print(f"Saved content to: {file_path}")
 
                 # Also create a docx file from the HTML content using pandoc
-                '''
+                
                 docx_path = os.path.join(output_dir, f"{link_data['c']}.docx")
                 if self.convert_html_to_docx(content, docx_path):
                     print(f"Saved docx to: {docx_path}")
                 else:
                     print(f"DOCX conversion skipped for: {filename} (HTML file saved successfully)")
-                '''
+                
                 saved_count += 1
 
                 # Add a small delay to be nice to the server
