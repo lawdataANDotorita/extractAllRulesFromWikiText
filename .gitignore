@@ -4,6 +4,9 @@
 
 # Ignore extracted rules directory
 extracted_rules/
+rules_new_2/
+rules_new/
+
 
 # Ignore Python cache files
 __pycache__/
@@ -38,6 +41,6 @@ extracted_law_links.txt
 *.pyd
 *.pyw
 *.pyz
-
+*.zip
 
 *.txt

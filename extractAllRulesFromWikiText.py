@@ -327,9 +327,9 @@ class WikiTextLinkExtractor:
         html_template = f"""<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="windows-1255">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./hokStyleNew.css">
 </head>
 <body>
     {str(main_content)}
@@ -416,7 +416,7 @@ class WikiTextLinkExtractor:
     def save_law_contents(self, law_links, max_links=-1):
         """Save the content of law links to files"""
         # Create extracted_rules directory if it doesn't exist
-        output_dir = os.path.join(get_script_dir(), "extracted_rules")
+        output_dir = os.path.join(get_script_dir(), "rules_new_2")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
@@ -431,7 +431,8 @@ class WikiTextLinkExtractor:
                     print(f"Could not extract content from: {link_data['url']}")
                     continue
 
-                file_hash1 = file_hash(content)
+                content_windows1255 = content.encode('windows-1255', errors='replace').decode('windows-1255')
+                file_hash1 = file_hash(content_windows1255)
 
                 # Create filename from URL
                 parsed_url = urlparse(link_data['url'])
@@ -446,7 +447,7 @@ class WikiTextLinkExtractor:
 
                 file_hash2 = ""
                 if os.path.exists(file_path):
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, 'r', encoding='windows-1255') as f:
                         content2 = f.read()
                         file_hash2 = file_hash(content2)
                 if file_hash1 == file_hash2:
@@ -454,18 +455,27 @@ class WikiTextLinkExtractor:
                     continue
 
                 # Save content to file
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(content)
-
+                try:
+                    # Convert UTF-8 content to Windows-1255
+                    with open(file_path, 'w', encoding='windows-1255') as f:
+                        f.write(content_windows1255)
+                except UnicodeEncodeError as e:
+                    print(f"Encoding error for {file_path}: {e}")
+                    # Fallback to UTF-8 if Windows-1255 fails
+                    '''
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    '''
                 print(f"Saved content to: {file_path}")
 
                 # Also create a docx file from the HTML content using pandoc
+                '''
                 docx_path = os.path.join(output_dir, f"{link_data['c']}.docx")
                 if self.convert_html_to_docx(content, docx_path):
                     print(f"Saved docx to: {docx_path}")
                 else:
                     print(f"DOCX conversion skipped for: {filename} (HTML file saved successfully)")
-
+                '''
                 saved_count += 1
 
                 # Add a small delay to be nice to the server
