@@ -18,8 +18,11 @@ import time
 import os
 import urllib.parse
 from datetime import datetime
+import subprocess
+import tempfile
 import sys
 import hashlib
+import pandas as pd
 
 HEBREW_MONTHS = {
     "ינואר": 1,
@@ -35,6 +38,8 @@ HEBREW_MONTHS = {
     "נובמבר": 11,
     "דצמבר": 12,
 }
+
+with_lua = True
 
 def file_hash(content):
     return hashlib.sha256(content.encode('utf-8')).hexdigest()
@@ -195,7 +200,34 @@ class WikiTextLinkExtractor:
         
         return any(pattern in href for pattern in navigation_patterns)
     
-    def extract_law_links(self, url):
+
+    def extract_law_links(self):
+        """Extract all law rule links from the existing_rules.xlsx file"""
+
+        # Get the script directory
+        script_dir = get_script_dir()
+        excel_path = os.path.join(script_dir, 'existing_rules_2.xlsx')
+        
+        try:
+            # Read the Excel file
+            df = pd.read_excel(excel_path)
+            
+            # Convert DataFrame to list of dictionaries
+            law_links = []
+            for _, row in df.iloc[0:].iterrows():
+                law_links.append({
+                    'c': row.iloc[0],  # First column
+                    'url': "https://he.wikisource.org/wiki/" + re.sub(r'\s+', '_', row.iloc[1].strip())  # Second column
+                })
+            print(f"Successfully loaded {len(law_links)} links from existing_rules.xlsx")
+            return law_links
+            
+        except Exception as e:
+            print(f"Error reading existing_rules.xlsx: {e}")
+            return []
+
+
+    def extract_law_links_from_url(self, url):
         """Extract all law rule links from the given URL"""
         content = self.fetch_page_content(url)
         if not content:
@@ -257,32 +289,134 @@ class WikiTextLinkExtractor:
         for img in main_content.find_all('img'):
             img.decompose()
 
+
         # Remove all span elements with class "mw-editsection"
         for span in main_content.find_all('span', class_="mw-editsection"):
             span.decompose()
 
+        for span in main_content.find_all('span', class_="printonly"):
+            span.decompose()
 
+        """
+        for span in main_content.find_all('div', class_="law-cleaner"):
+            span.decompose()
+        """
+
+        for span in main_content.find_all('div', class_="printfooter"):
+            span.decompose()
+
+        for span in main_content.find_all('div', class_="graytext"):
+            span.decompose()
+
+        # Find all div elements with class law-number
+        if with_lua:
+            for law_div in main_content.find_all('div', class_='law-number'):
+                # Find all direct child a elements
+                for a_tag in law_div.find_all('a', recursive=False):
+                    
+                    # Create a new span element with the same content and attributes as the a tag
+                    new_span = soup.new_tag('span')
+                    new_span.string = a_tag.string
+                    new_span['class'] = a_tag.get('class', [])+ ['law-number-link']
+                    new_span['href'] = a_tag.get('href', '')
+                    
+                    # Replace the a tag with the new span
+                    a_tag.replace_with(new_span)
 
         # Create a new HTML document with proper structure
         html_template = f"""<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="windows-1255">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{soup.title.string if soup.title else 'Law Document'}</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./hokStyleNew.css">
 </head>
 <body>
     {str(main_content)}
 </body>
 </html>"""
-        
+
         return html_template
+
+    def check_pandoc_available(self):
+        """Check if pandoc is available on the system."""
+        try:
+            # Try different pandoc command variations
+            pandoc_commands = ["pandoc", "pandoc.exe"]
+            for cmd in pandoc_commands:
+                try:
+                    result = subprocess.run([cmd, "--version"], 
+                                          capture_output=True, 
+                                          text=True, 
+                                          timeout=10)
+                    if result.returncode == 0:
+                        return cmd
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    continue
+            return None
+        except Exception:
+            return None
+
+    def convert_html_to_docx(self, html_content, output_path):
+        """Convert HTML content to a docx file using pandoc with a reference template."""
+        # First check if pandoc is available
+        pandoc_cmd = self.check_pandoc_available()
+        if not pandoc_cmd:
+            print("Warning: Pandoc is not installed or not found in PATH.")
+            print("Please install Pandoc from https://pandoc.org/installing.html to generate DOCX files.")
+            print("Skipping DOCX conversion...")
+            return False
+
+        # Get the path to the colored reference template (preferred) or fallback to original
+        reference_doc_path = os.path.join(get_script_dir(), "word_reference_template.docx")
+        lua_doc_path = os.path.join(get_script_dir(), "map-style.lua")
+            
+        try:
+            # Create a temporary directory to store HTML file
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Write the HTML file
+                html_path = os.path.join(temp_dir, "temp.html")
+                with open(html_path, "w", encoding="utf-8") as f:
+                    f.write(html_content)
+                
+                # Build pandoc command with reference document if available
+                pandoc_args = [
+                    pandoc_cmd,
+                    html_path,
+                    "-f", "html",
+                    "-t", "docx",
+                    "--metadata=lang:he",
+                    "--metadata=dir:rtl",
+                ]
+                
+                # Add reference document if it exists
+                if os.path.exists(reference_doc_path):
+                    pandoc_args.extend(["--reference-doc", reference_doc_path])
+ 
+                if os.path.exists(lua_doc_path) and with_lua:
+                    pandoc_args.extend(["--lua-filter", lua_doc_path])
+
+                pandoc_args.extend(["-o", output_path])
+                
+                # Run pandoc with the temporary directory as working directory
+                subprocess.run(pandoc_args, check=True, cwd=temp_dir)
+                return True
+
+        except subprocess.CalledProcessError as e:
+            print(f"Error running pandoc command: {e}")
+            return False
+        except FileNotFoundError as e:
+            print(f"Pandoc executable not found: {e}")
+            print("Please install Pandoc from https://pandoc.org/installing.html")
+            return False
+        except Exception as e:
+            print(f"Error converting HTML to docx with pandoc: {e}")
+            return False
 
     def save_law_contents(self, law_links, max_links=-1):
         """Save the content of law links to files"""
         # Create extracted_rules directory if it doesn't exist
-        output_dir = os.path.join(get_script_dir(), "extracted_rules")
+        output_dir = os.path.join(get_script_dir(), "rules_new_3")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
@@ -297,7 +431,8 @@ class WikiTextLinkExtractor:
                     print(f"Could not extract content from: {link_data['url']}")
                     continue
 
-                file_hash1 = file_hash(content)
+                content_windows1255 = content.encode('windows-1255', errors='replace').decode('windows-1255')
+                file_hash1 = file_hash(content_windows1255)
 
                 # Create filename from URL
                 parsed_url = urlparse(link_data['url'])
@@ -308,25 +443,41 @@ class WikiTextLinkExtractor:
                 filename = urllib.parse.unquote(filename)
                 
                 # Add .htm extension
-                file_path = os.path.join(output_dir, f"{filename}.htm")
+                file_path = os.path.join(output_dir, f"{link_data['c']}.htm")
 
                 file_hash2 = ""
                 if os.path.exists(file_path):
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, 'r', encoding='windows-1255') as f:
                         content2 = f.read()
                         file_hash2 = file_hash(content2)
                 if file_hash1 == file_hash2:
                     print(f"File content unchanged: {file_path}")
                     continue
 
-
                 # Save content to file
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.write(content)
-                    
+                try:
+                    # Convert UTF-8 content to Windows-1255
+                    with open(file_path, 'w', encoding='windows-1255') as f:
+                        f.write(content_windows1255)
+                except UnicodeEncodeError as e:
+                    print(f"Encoding error for {file_path}: {e}")
+                    # Fallback to UTF-8 if Windows-1255 fails
+                    '''
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    '''
                 print(f"Saved content to: {file_path}")
-                saved_count += 1
+
+                # Also create a docx file from the HTML content using pandoc
                 
+                docx_path = os.path.join(output_dir, f"{link_data['c']}.docx")
+                if self.convert_html_to_docx(content, docx_path):
+                    print(f"Saved docx to: {docx_path}")
+                else:
+                    print(f"DOCX conversion skipped for: {filename} (HTML file saved successfully)")
+                
+                saved_count += 1
+
                 # Add a small delay to be nice to the server
                 time.sleep(0.5)
                 
@@ -335,50 +486,33 @@ class WikiTextLinkExtractor:
                 
         return saved_count
 
+
 def main():
     """Main function to execute the link extraction"""
     history_url = (
         "https://he.wikisource.org/w/index.php?title=%D7%A1%D7%A4%D7%A8_%D7%94%D7%97%D7%95%D7%A7%D7%99%D7%9D_%D7%94%D7%A4%D7%AA%D7%95%D7%97&action=history"
     )
-    if not should_download(history_url):
-        return
+#    if not should_download(history_url):
+#       return
     target_url = "https://he.wikisource.org/wiki/%D7%A1%D7%A4%D7%A8_%D7%94%D7%97%D7%95%D7%A7%D7%99%D7%9D_%D7%94%D7%A4%D7%AA%D7%95%D7%97"
     
     # Create extractor instance
     extractor = WikiTextLinkExtractor()
     
     # Extract law rule links
-    law_links_vector = extractor.extract_law_links(target_url)
+    law_links_vector = extractor.extract_law_links()
     
     # Iterate through the vector and print all links
-    if law_links_vector:
-        for i, link_data in enumerate(law_links_vector, 1):
-            print(f"{i:3d}. URL: {link_data['url']}")
-            if link_data['text']:
-                print(f"     Text: {link_data['text']}")
-            print(f"     Original href: {link_data['original_href']}")
-            print()
-    else:
-        print("No law rule links found.")
     
     print(f"\n=== SUMMARY ===")
     print(f"Successfully extracted {len(law_links_vector)} law rule links")
     
     # Save results to file
-    output_file = os.path.join(get_script_dir(), "extracted_law_links.txt")
-    try:
-        with open(output_file, 'w', encoding='utf-8') as f:
-            for i, link_data in enumerate(law_links_vector, 1):
-                f.write(f"{i}. {link_data['url']}\n")
-                if link_data['text']:
-                    f.write(f"   Text: {link_data['text']}\n")
-                f.write(f"   Original href: {link_data['original_href']}\n\n")
-        print(f"Results also saved to: {output_file}")
-    except Exception as e:
-        print(f"Error saving to file: {e}")
         
     print("\n=== Extracting Law Contents ===")
+#    saved_count = extractor.save_law_contents(law_links_vector)
     saved_count = extractor.save_law_contents(law_links_vector)
+
     print(f"\nSuccessfully saved content of {saved_count} law links to the 'extracted_rules' folder")
 
 if __name__ == "__main__":
