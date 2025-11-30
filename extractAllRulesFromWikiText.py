@@ -431,8 +431,8 @@ class WikiTextLinkExtractor:
                     print(f"Could not extract content from: {link_data['url']}")
                     continue
 
-                content_windows1255 = content.encode('windows-1255', errors='replace').decode('windows-1255')
-                file_hash1 = file_hash(content_windows1255)
+               content_windows1255 = content.encode('windows-1255', errors='xmlcharrefreplace').decode('windows-1255')
+               file_hash1 = file_hash(content_windows1255)
 
                 # Create filename from URL
                 parsed_url = urlparse(link_data['url'])

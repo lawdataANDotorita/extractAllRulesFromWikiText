@@ -38,3 +38,8 @@ dist/
 
 
 *.txt
+
+
+*.xlsx
+
+rules_new*
