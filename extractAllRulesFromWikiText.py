@@ -133,54 +133,6 @@ class WikiTextLinkExtractor:
             print(f"Error fetching {url}: {e}")
             return None
     
-    def is_law_rule_link(self, href, link_text=""):
-        """
-        Determine if a link is a law rule based on various criteria
-        Returns True if it's a law rule, False otherwise
-        """
-        if not href:
-            return True  # Consider empty hrefs as law rules to filter them out
-            
-        # Patterns that typically indicate law rules in Hebrew legal documents
-        law_patterns = [
-            r'חוק',  # Law
-            r'פקודת',  # Ordinance
-            r'תקנות',  # Regulations
-            r'צו',   # Order
-            r'הודע',  # Notice
-            r'כללי',  # Rules
-            r'נוהל',  # Procedure
-            r'הורא',  # Instructions
-            r'הנחיות',  # Guidance
-            r'תקנון',  # Regulations
-            r'החלט',  # decision
-            r'הנחי',  # instruction
-            r'היתר',  # mandate
-            r'הכרז',  # declaration
-            r'אכרז',  # proposal
-            r'דבר',  # proposal
-            r'נורמ',  # proposal
-            r'הודע',  # proposal
-            r'רשימ',  # proposal
-            r'דריש',  # proposal
-            r'קוו',  # proposal
-            r'קביע',  # proposal
-            r'רשימ',  # proposal
-            r'פרט',  # proposal
-        ]
-        
-        # Check if the href or link text contains law-related terms
-        combined_text = f"{href} {link_text}".lower()
-        
-        for pattern in law_patterns:
-            if re.search(pattern, combined_text):
-                return True
-                
-        # Additional checks for specific URL patterns that might indicate laws
-        if '/wiki/' in href and any(term in href for term in ['%D7%97%D7%95%D7%A7', '%D7%A4%D7%A7%D7%95%D7%93%D7%AA', '%D7%AA%D7%A7%D7%A0%D7%95%D7%AA']):
-            return True
-            
-        return False
     
     def is_internal_navigation_link(self, href):
         """Check if link is internal navigation (edit, history, etc.)"""
@@ -206,7 +158,7 @@ class WikiTextLinkExtractor:
 
         # Get the script directory
         script_dir = get_script_dir()
-        excel_path = os.path.join(script_dir, 'existing_rules_2.xlsx')
+        excel_path = os.path.join(script_dir, 'existing_rules_081225.xlsx')
         
         try:
             # Read the Excel file
@@ -225,51 +177,6 @@ class WikiTextLinkExtractor:
         except Exception as e:
             print(f"Error reading existing_rules.xlsx: {e}")
             return []
-
-
-    def extract_law_links_from_url(self, url):
-        """Extract all law rule links from the given URL"""
-        content = self.fetch_page_content(url)
-        if not content:
-            return []
-            
-        soup = BeautifulSoup(content, 'html.parser')
-        
-        # Find all <a> tags with href attributes
-        all_links = soup.find_all('a', href=True)
-        print(f"Found {len(all_links)} total links")
-        
-        law_links = []
-        
-        for link in all_links:
-            href = link.get('href', '').strip()
-            link_text = link.get_text(strip=True)
-            
-            if not href:
-                continue
-                
-            # Skip internal navigation links
-            if self.is_internal_navigation_link(href):
-                continue
-                
-            # Convert relative URLs to absolute
-            if href.startswith('/'):
-                full_url = urljoin(self.base_url, href)
-            elif href.startswith('http'):
-                full_url = href
-            else:
-                continue  # Skip other relative links
-                
-            # Check if it IS a law rule
-            if self.is_law_rule_link(href, link_text):
-                law_links.append({
-                    'url': full_url,
-                    'text': link_text,
-                    'original_href': href
-                })
-                
-        print(f"Filtered to {len(law_links)} law rule links")
-        return law_links
 
     def extract_law_content(self, url):
         """Extract the main content from a law page"""
@@ -416,7 +323,7 @@ class WikiTextLinkExtractor:
     def save_law_contents(self, law_links, max_links=-1):
         """Save the content of law links to files"""
         # Create extracted_rules directory if it doesn't exist
-        output_dir = os.path.join(get_script_dir(), "rules_new_3")
+        output_dir = os.path.join(get_script_dir(), "rules_new_081225")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
