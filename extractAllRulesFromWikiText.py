@@ -116,10 +116,11 @@ class WikiTextLinkExtractor:
         self.base_url = base_url
         self.session = requests.Session()
         # Set a proper user agent to avoid getting blocked
+        # In WikiTextLinkExtractor.__init__
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        })
-        
+            'User-Agent': 'ExtractAllRulesFromWikiText/1.0 (Python script for legal data extraction; contact: [Your Name or Email Address])',
+            'Accept-Encoding': 'gzip'  # Add this
+        })        
     def fetch_page_content(self, url):
         """Fetch the content of the given URL"""
         try:
@@ -158,7 +159,7 @@ class WikiTextLinkExtractor:
 
         # Get the script directory
         script_dir = get_script_dir()
-        excel_path = os.path.join(script_dir, 'existing_rules_081225.xlsx')
+        excel_path = os.path.join(script_dir, 'existing_rules_151225_1.xlsx')
         
         try:
             # Read the Excel file
@@ -180,6 +181,7 @@ class WikiTextLinkExtractor:
 
     def extract_law_content(self, url):
         """Extract the main content from a law page"""
+        time.sleep(2)
         content = self.fetch_page_content(url)
         if not content:
             return None
@@ -323,7 +325,7 @@ class WikiTextLinkExtractor:
     def save_law_contents(self, law_links, max_links=-1):
         """Save the content of law links to files"""
         # Create extracted_rules directory if it doesn't exist
-        output_dir = os.path.join(get_script_dir(), "rules_new_081225")
+        output_dir = os.path.join(get_script_dir(), "rules_new_4")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
@@ -386,8 +388,6 @@ class WikiTextLinkExtractor:
                 saved_count += 1
 
                 # Add a small delay to be nice to the server
-                time.sleep(0.5)
-                
             except Exception as e:
                 print(f"Error processing {link_data['url']}: {e}")
                 
